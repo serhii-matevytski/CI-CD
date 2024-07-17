@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Salesforce CLI
+        run: |
+          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm install sfdx-cli --global
+          sfdx --version
+
+      - name: Authenticate to Dev Hub
+        env:
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+        run: |
+          echo "$SFDX_AUTH_URL" > sfdx_auth_url.txt
+          sfdx auth:sfdxurl:store -f sfdx_auth_url.txt -a DevHub
+
+      - name: Create Scratch Org
+        run: sfdx force:org:create -f config/project-scratch-def.json -d 1 -s -a ScratchOrg
+
+      - name: Push source to Scratch Org
+        run: sfdx force:source:push -u ScratchOrg
+
+      - name: Run Tests
+        run: sfdx force:apex:test:run -u ScratchOrg --resultformat human --codecoverage --wait 10
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: sfdx force:source:deploy -u ProdOrg -x manifest/package.xml
