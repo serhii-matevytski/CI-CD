@@ -22,21 +22,21 @@ jobs:
       - name: Install Salesforce CLI
         run: |
           npm install @salesforce/cli --global
-          sfdx --version
+          sf --version
 
       - name: Authenticate to Developer Org
         env:
           SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
         run: |
           echo "$SFDX_AUTH_URL" > sfdx_auth_url.txt
-          sfdx auth:sfdxurl:store -f sfdx_auth_url.txt -a DevOrg
+          sf org login sfdx-url --file sfdx_auth_url.txt --alias DevOrg
 
-      - name: Push source to Developer Org
-        run: sfdx force:source:push -u DevOrg
+      - name: Deploy source to Developer Org
+        run: sf project deploy start --target-org DevOrg --wait 10
 
       - name: Run Tests in Developer Org
-        run: sfdx force:apex:test:run -u DevOrg --resultformat human --codecoverage --wait 10
+        run: sf apex run test --target-org DevOrg --result-format human --code-coverage --wait 10
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
-        run: sfdx force:source:deploy -u DevOrg -x manifest/package.xml
+        run: sf project deploy start --target-org DevOrg --manifest manifest/package.xml --wait 10
