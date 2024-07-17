@@ -29,14 +29,14 @@ jobs:
           SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
         run: |
           echo "$SFDX_AUTH_URL" > sfdx_auth_url.txt
-          sf org login sfdx-url --file sfdx_auth_url.txt --alias DevOrg
+          sf org login sfdx-url --file sfdx_auth_url.txt --alias Developer_ORG
 
       - name: Deploy source to Developer Org
-        run: sf project deploy start --target-org DevOrg --wait 10
+        run: sf project deploy start --target-org Developer_ORG --wait 10
 
       - name: Run Tests in Developer Org
-        run: sf apex run test --target-org DevOrg --result-format human --code-coverage --wait 10
+        run: sf apex run test --target-org Developer_ORG --result-format human --code-coverage --wait 10
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
-        run: sf project deploy start --target-org DevOrg --manifest manifest/package.xml --wait 10
+        run: sf project deploy start --target-org Developer_ORG --manifest manifest/package.xml --wait 10
