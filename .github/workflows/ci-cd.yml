@@ -21,12 +21,12 @@ jobs:
 
       - name: Install Salesforce CLI
         run: |
-          npm install sfdx-cli --global
+          npm install @salesforce/cli --global
           sfdx --version
 
       - name: Authenticate to Developer Org
         env:
-          SFDX_AUTH_URL: ${{ secrets.DEV_ORG_SFDX_AUTH_URL }}
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
         run: |
           echo "$SFDX_AUTH_URL" > sfdx_auth_url.txt
           sfdx auth:sfdxurl:store -f sfdx_auth_url.txt -a DevOrg
